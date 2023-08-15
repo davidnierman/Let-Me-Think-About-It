@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GCDemo", "GCDemo\GCDemo.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stacks", "Stacks\Stacks.csproj", "{A3CF66BD-72FB-4931-B097-3D88C77C5702}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cryptography", "Cryptography\Cryptography.csproj", "{96053C71-B103-4E53-9395-C33FB8C79C23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A3CF66BD-72FB-4931-B097-3D88C77C5702}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3CF66BD-72FB-4931-B097-3D88C77C5702}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3CF66BD-72FB-4931-B097-3D88C77C5702}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96053C71-B103-4E53-9395-C33FB8C79C23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96053C71-B103-4E53-9395-C33FB8C79C23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96053C71-B103-4E53-9395-C33FB8C79C23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96053C71-B103-4E53-9395-C33FB8C79C23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

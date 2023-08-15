@@ -18,6 +18,20 @@ public class AsymmetricEncryptionTesting
         Console.WriteLine($"decrypted message: {decryptedMessage}");
         Assert.Equal(numberToEncrypt, decryptedMessage);
     }
+    [Fact]
+    public void Test2()
+    {
+        int numberToEncrypt = 121;
+        AsymmetricEncryption e = new();
+        Console.WriteLine($"private key {e.PrivateKey}");
+        Console.WriteLine($"public key {e.PublicKey}");
+        Console.WriteLine($"message to encrypt: {numberToEncrypt}");
+        var encryptedMessage = e.Decrypt(numberToEncrypt);
+        Console.WriteLine($"encrytped message: {encryptedMessage}");
+        var decryptedMessage = e.Encrypt(encryptedMessage);
+        Console.WriteLine($"decrypted message: {decryptedMessage}");
+        Assert.Equal(numberToEncrypt, decryptedMessage);
+    }
 
     public class AsymmetricEncryption
     {

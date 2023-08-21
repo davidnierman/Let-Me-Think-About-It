@@ -6,7 +6,10 @@ namespace StacksTests
         public void TestSetOfTeams()
         {
             Team chargers = new Team("Chargers");
-            Assert.IsType<Team>()
+            Team rams = new Team("Rams");
+            Assert.IsType<Team>(chargers);
+            Assert.IsType<Team>(rams);
+            Assert.NotEqual(chargers, rams);
         }
 
     }
@@ -22,6 +25,16 @@ draws are always worth 1 season point
 in the event of a tie the winner is determined by the difference in points scored by them vs the points scored against them
 the league table should be available at any point in time with those who have played the most games ranked above those that have played less
 bonus points for keeping data private*/
+
+    class Team
+    {
+        private string _name;
+
+        public Team(string Name)
+        {
+            _name = Name;
+        }
+    }
 
 
 

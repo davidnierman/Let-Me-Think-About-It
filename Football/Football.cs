@@ -1,4 +1,4 @@
-namespace StacksTests
+namespace FootballTests
 {
     public class FootballTests
     {
@@ -19,18 +19,16 @@ namespace StacksTests
             Team rams = new Team("Rams");
             Team[] teams = { chargers, rams };
             Season mmxxiii = new Season(teams);
-            Season.Game chargersVsRams = mmxxiii.PlayGame(chargers, rams);
-            chargersVsRams.AddSeasonPoints(10, 21);
+            mmxxiii.AddSeasonPoints(chargers, 10, rams, 21);
             Assert.Equal(0, mmxxiii.TallyTable[chargers]);
             Assert.Equal(3, mmxxiii.TallyTable[rams]);
-            chargersVsRams.AddSeasonPoints(35, 21);
+            mmxxiii.AddSeasonPoints(chargers, 35, rams, 21);
             Assert.Equal(2, mmxxiii.TallyTable[chargers]);
             Assert.Equal(3, mmxxiii.TallyTable[rams]);
-            chargersVsRams.AddSeasonPoints(14, 14);
+            mmxxiii.AddSeasonPoints(chargers, 14, rams, 14);
             Assert.Equal(3, mmxxiii.TallyTable[chargers]);
             Assert.Equal(4, mmxxiii.TallyTable[rams]);
         }
-
     }
 
     //  PRODUCTION CODE BELOW THIS LINE
@@ -71,8 +69,26 @@ bonus points for keeping data private*/
 
         public Game PlayGame(Team homeTeam, Team awayTeam)
         {
-            Game g = new Game(homeTeam, awayTeam, this);
+            Game g = new Game(homeTeam, awayTeam);
             return g;
+        }
+
+        // I want the below method private, but cannot test if it is...
+        public void AddSeasonPoints(Team homeTeam, int homeTeamGamePoints, Team awayTeam, int awayTeamGamePoints)
+        {
+            if (homeTeamGamePoints > awayTeamGamePoints)
+            {
+                _tallyTable[homeTeam] += 2;
+            }
+            else if (awayTeamGamePoints > homeTeamGamePoints)
+            {
+                _tallyTable[awayTeam] += 3;
+            }
+            else
+            {
+                _tallyTable[homeTeam] += 1;
+                _tallyTable[awayTeam] += 1;
+            }
         }
 
 
@@ -80,50 +96,27 @@ bonus points for keeping data private*/
         {
             private Team _homeTeam;
             private Team _awayTeam;
-            private Season _season;
             private int _homeTeamPoints;
             private int _awayTeamPoints;
-
 
             public int HomeTeamPoints => _homeTeamPoints;
             public int AwayTeamPoints => _awayTeamPoints;
 
-
-            public Game(Team homeTeam, Team awayTeam, Season season)
+            public Game(Team homeTeam, Team awayTeam)
             {
                 _homeTeam = homeTeam;
                 _awayTeam = awayTeam;
-                _season = season;
             }
 
             public void Play()
             {
                 Random rnd = new Random();
-                int homeTeamGamePoints = rnd.Next(100);
-                int awayTeamGamePoints = rnd.Next(100);
-                AddSeasonPoints(homeTeamGamePoints, awayTeamGamePoints);
+                int _homeTeamPoints = rnd.Next(100);
+                int _awayTeamPoints = rnd.Next(100);
+
             }
 
-            // I want the below method private, but cannot test if it is...
-            public void AddSeasonPoints(int homeTeamGamePoints, int awayTeamGamePoints)
-            {
-                _homeTeamPoints = homeTeamGamePoints;
-                _awayTeamPoints = awayTeamGamePoints;
 
-                if (_homeTeamPoints > _awayTeamPoints)
-                {
-                    _season._tallyTable[_homeTeam] += 2;
-                }
-                else if (_awayTeamPoints > _homeTeamPoints)
-                {
-                    _season._tallyTable[_awayTeam] += 3;
-                }
-                else
-                {
-                    _season._tallyTable[_homeTeam] += 1;
-                    _season._tallyTable[_awayTeam] += 1;
-                }
-            }
         }
 
     }

@@ -1,3 +1,6 @@
+using System.Dynamic;
+using Xunit.Sdk;
+
 namespace FootballTests
 {
     public class FootballTests
@@ -13,22 +16,39 @@ namespace FootballTests
         }
 
         [Fact]
-        public void TestHomeAndAwaySeasonPoints()
+        public void TestGame()
         {
             Team chargers = new Team("Chargers");
             Team rams = new Team("Rams");
             Team[] teams = { chargers, rams };
             Season mmxxiii = new Season(teams);
-            mmxxiii.AddSeasonPoints(chargers, 10, rams, 21);
-            Assert.Equal(0, mmxxiii.TallyTable[chargers]);
-            Assert.Equal(3, mmxxiii.TallyTable[rams]);
-            mmxxiii.AddSeasonPoints(chargers, 35, rams, 21);
-            Assert.Equal(2, mmxxiii.TallyTable[chargers]);
-            Assert.Equal(3, mmxxiii.TallyTable[rams]);
-            mmxxiii.AddSeasonPoints(chargers, 14, rams, 14);
-            Assert.Equal(3, mmxxiii.TallyTable[chargers]);
-            Assert.Equal(4, mmxxiii.TallyTable[rams]);
+            Season.Game game = new(chargers, rams);
+            game.Play();
+            Assert.Equal(true, game.Final);
+            Assert.NotNull(game.HomeTeamPoints);
+            Assert.NotNull(game.AwayTeamPoints);
         }
+        [Fact]
+        public void TestAddingSeasonPoints()
+        {
+            Team chargers = new Team("Chargers");
+            Team rams = new Team("Rams");
+            Team[] teams = { chargers, rams };
+            Season mmxxiii = new Season(teams);
+            Season.Game game = new(chargers, rams);
+            game.Play();
+            mmxxiii.AddSeasonPoints(game);
+            Assert.NotNull(mmxxiii.TallyTable);
+            // following tests if I wanted to make game points private, but does not cover every case..
+            Assert.True(mmxxiii.TallyTable[chargers] + mmxxiii.TallyTable[rams] > 0);
+            Assert.True(mmxxiii.TallyTable[chargers] + mmxxiii.TallyTable[rams] < 4);
+            Assert.True(Math.Abs(mmxxiii.TallyTable[chargers] - mmxxiii.TallyTable[rams]) < 4);
+            // using game points to verify --> easier to test when data has accessors/getters
+            Assert.Equal(game.AwayTeamPoints > game.HomeTeamPoints, mmxxiii.TallyTable[rams] - 3 == mmxxiii.TallyTable[chargers]);
+            Assert.Equal(game.AwayTeamPoints < game.HomeTeamPoints, mmxxiii.TallyTable[rams] + 2 == mmxxiii.TallyTable[chargers]);
+            Assert.Equal(game.AwayTeamPoints == game.HomeTeamPoints, mmxxiii.TallyTable[rams] == mmxxiii.TallyTable[chargers]);
+        }
+
     }
 
     //  PRODUCTION CODE BELOW THIS LINE
@@ -51,6 +71,11 @@ bonus points for keeping data private*/
         {
             _name = Name;
         }
+
+        public override string ToString()
+        {
+            return _name;
+        }
     }
 
     class Season
@@ -70,24 +95,25 @@ bonus points for keeping data private*/
         public Game PlayGame(Team homeTeam, Team awayTeam)
         {
             Game g = new Game(homeTeam, awayTeam);
+            g.Play();
             return g;
         }
 
         // I want the below method private, but cannot test if it is...
-        public void AddSeasonPoints(Team homeTeam, int homeTeamGamePoints, Team awayTeam, int awayTeamGamePoints)
+        public void AddSeasonPoints(Game game)
         {
-            if (homeTeamGamePoints > awayTeamGamePoints)
+            if (game.HomeTeamPoints > game.AwayTeamPoints)
             {
-                _tallyTable[homeTeam] += 2;
+                _tallyTable[game.HomeTeam] += 2;
             }
-            else if (awayTeamGamePoints > homeTeamGamePoints)
+            else if (game.AwayTeamPoints > game.HomeTeamPoints)
             {
-                _tallyTable[awayTeam] += 3;
+                _tallyTable[game.AwayTeam] += 3;
             }
             else
             {
-                _tallyTable[homeTeam] += 1;
-                _tallyTable[awayTeam] += 1;
+                _tallyTable[game.HomeTeam] += 1;
+                _tallyTable[game.AwayTeam] += 1;
             }
         }
 
@@ -98,7 +124,15 @@ bonus points for keeping data private*/
             private Team _awayTeam;
             private int _homeTeamPoints;
             private int _awayTeamPoints;
+            private bool _final = false;
+            private bool _homeTeamWin;
 
+            public Team HomeTeam => _homeTeam;
+            public Team AwayTeam => _awayTeam;
+
+            public bool Final => _final;
+
+            public bool HomeTeamWin => _homeTeamWin;
             public int HomeTeamPoints => _homeTeamPoints;
             public int AwayTeamPoints => _awayTeamPoints;
 
@@ -108,13 +142,29 @@ bonus points for keeping data private*/
                 _awayTeam = awayTeam;
             }
 
+            public class GameAlreadyPlayed : Exception
+            {
+                public GameAlreadyPlayed(string message) : base(message) { }
+            }
+
             public void Play()
             {
-                Random rnd = new Random();
-                int _homeTeamPoints = rnd.Next(100);
-                int _awayTeamPoints = rnd.Next(100);
+                if (!_final)
+                {
+                    Random rnd = new Random();
+                    _homeTeamPoints = rnd.Next(100);
+                    _awayTeamPoints = rnd.Next(100);
+                    _homeTeamWin = true ? HomeTeamPoints > _awayTeamPoints : false;
+                    _final = true;
+                }
+                else
+                {
+                    throw new GameAlreadyPlayed($"{_homeTeam} already played the {_awayTeam} at home");
+                }
 
             }
+
+
 
 
         }

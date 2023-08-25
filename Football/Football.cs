@@ -2,6 +2,7 @@
 
 using System.ComponentModel;
 using System.Security.Cryptography.X509Certificates;
+using Xunit.Sdk;
 
 namespace FootballTests
 {
@@ -11,6 +12,7 @@ namespace FootballTests
         // you have a set of teams identified by name (Chargers, Rams, Seahawks, 49ers, Raiders, Cardinals, Bronocs)
         public static IEnumerable<object[]> Teams => new object[][]
    {
+        new object[] { new Team[] { new Team("Chargers") } },
         new object[] { new Team[] { new Team("Chargers"), new Team("Rams") } },
         new object[] { new Team[] { new Team("Rams"), new Team("Chargers") } },
         new object[] { new Team[] { new Team("Rams"), new Team("Chargers"), new Team("SeaHawks") } }
@@ -120,12 +122,20 @@ namespace FootballTests
             }
         }
 
+        public class NeedMoreThanOneTeam : Exception
+        {
+            public NeedMoreThanOneTeam(string message) : base(message) { }
+        }
+
         public HashSet<Game> CreateSeasonGames()
         {
             HashSet<Game> SeasonGames = new();
             List<Team> teamList = _tallyTable.Keys.ToList();
             Random rnd = new Random();
-
+            if (teamList.Count < 2)
+            {
+                throw new NeedMoreThanOneTeam($"{teamList[0]} is the only team in the season. They cannot play themselves!");
+            }
             HashSet<int> awayGames = new();
             for (int i = 0; i < teamList.Count;)
             {
@@ -151,6 +161,8 @@ namespace FootballTests
             g.Play();
             return g;
         }
+
+
 
         // I want the below method private, but cannot test if it is...
         public void AddSeasonPoints(Game game)

@@ -1,10 +1,13 @@
-using System.Dynamic;
-using Xunit.Sdk;
+
+
+using System.ComponentModel;
 
 namespace FootballTests
 {
     public class FootballTests
     {
+
+
         [Fact]
         public void TestSetOfTeams()
         {
@@ -28,6 +31,7 @@ namespace FootballTests
             Assert.NotNull(game.HomeTeamPoints);
             Assert.NotNull(game.AwayTeamPoints);
         }
+
         [Fact]
         public void TestAddingSeasonPoints()
         {
@@ -38,15 +42,44 @@ namespace FootballTests
             Season.Game game = new(chargers, rams);
             game.Play();
             mmxxiii.AddSeasonPoints(game);
-            Assert.NotNull(mmxxiii.TallyTable);
-            // following tests if I wanted to make game points private, but does not cover every case..
-            Assert.True(mmxxiii.TallyTable[chargers] + mmxxiii.TallyTable[rams] > 0);
-            Assert.True(mmxxiii.TallyTable[chargers] + mmxxiii.TallyTable[rams] < 4);
-            Assert.True(Math.Abs(mmxxiii.TallyTable[chargers] - mmxxiii.TallyTable[rams]) < 4);
             // using game points to verify --> easier to test when data has accessors/getters
             Assert.Equal(game.AwayTeamPoints > game.HomeTeamPoints, mmxxiii.TallyTable[rams] - 3 == mmxxiii.TallyTable[chargers]);
             Assert.Equal(game.AwayTeamPoints < game.HomeTeamPoints, mmxxiii.TallyTable[rams] + 2 == mmxxiii.TallyTable[chargers]);
             Assert.Equal(game.AwayTeamPoints == game.HomeTeamPoints, mmxxiii.TallyTable[rams] == mmxxiii.TallyTable[chargers]);
+        }
+
+        [Fact]
+        public void CannotPlayMoreThanOneGame()
+        {
+            Team chargers = new Team("Chargers");
+            Team rams = new Team("Rams");
+            Team[] teams = { chargers, rams };
+            Season mmxxiii = new Season(teams);
+            Season.Game game = new(chargers, rams);
+            game.Play();
+            Assert.Throws<Season.Game.GameAlreadyPlayed>(game.Play);
+        }
+        [Fact]
+        public void PlaySeason()
+        {
+            Team chargers = new Team("Chargers");
+            Team rams = new Team("Rams");
+            Team[] teams = { chargers, rams };
+            Season mmxxiii = new Season(teams);
+            Season.Game game = new(chargers, rams);
+            game.Play();
+            Assert.Throws<Season.Game.GameAlreadyPlayed>(game.Play);
+        }
+
+        [Fact]
+        public void TestCreateSeasonGames()
+        {
+            Team chargers = new Team("Chargers");
+            Team rams = new Team("Rams");
+            Team[] teams = { chargers, rams };
+            Season mmxxiii = new Season(teams);
+            var seasonGames = mmxxiii.CreateSeasonGames();
+            Assert.Equal(teams.Length, seasonGames.Count);
         }
 
     }
@@ -90,6 +123,34 @@ bonus points for keeping data private*/
             {
                 _tallyTable.Add(team, 0);
             }
+        }
+
+        public HashSet<Game> CreateSeasonGames()
+        {
+            HashSet<Game> SeasonGames = new();
+            List<Team> teamList = _tallyTable.Keys.ToList<Team>();
+            Random rnd = new Random();
+
+            HashSet<int> awayGames = new();
+            for (int i = 0; i < teamList.Count;)
+            {
+                int randomIndex = rnd.Next(teamList.Count);
+                if (awayGames.Contains(randomIndex) || randomIndex == i)
+                {
+                    continue;
+                }
+                else
+                {
+                    awayGames.Add(randomIndex);
+                    i++;
+                }
+            }
+            for (int i = 0; i < teamList.Count; i++)
+            {
+                Game game = new Game(teamList[i], teamList[awayGames.ElementAt(i)]);
+                SeasonGames.Add(game);
+            }
+            return SeasonGames;
         }
 
         public Game PlayGame(Team homeTeam, Team awayTeam)

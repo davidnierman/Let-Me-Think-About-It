@@ -64,6 +64,7 @@ namespace Football
         }
 
         // each season every team plays one game at home and one game away
+        // teams will not play each other twice
         [Theory]
         [MemberData(nameof(Teams))]
         public void TestCreateSeasonGames(Team[] teams)
@@ -73,11 +74,17 @@ namespace Football
                 Season mmxxiii = new Season(teams);
                 Assert.Equal(teams.Length, mmxxiii.SeasonGames.Count);
                 Console.WriteLine("--------- SEASON ---------");
+                HashSet<Team> homeGames = new();
+                HashSet<Team> awayGames = new();
                 foreach (var seasonGame in mmxxiii.SeasonGames)
                 {
                     Assert.NotEqual(seasonGame.AwayTeam, seasonGame.HomeTeam);
-                    Console.WriteLine($"home: {seasonGame.HomeTeam} | away: {seasonGame.AwayTeam}");
+                    homeGames.Add(seasonGame.HomeTeam);
+                    awayGames.Add(seasonGame.AwayTeam);
+                    Season.Game reversedGame = new(seasonGame.AwayTeam, seasonGame.HomeTeam);
+                    Assert.False(mmxxiii.SeasonGames.Contains(reversedGame));
                 }
+                Assert.Equal(mmxxiii.SeasonGames.Count * 2, homeGames.Count + awayGames.Count);
             }
 
         }

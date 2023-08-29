@@ -73,7 +73,6 @@ namespace Football
             {
                 Season mmxxiii = new Season(teams);
                 Assert.Equal(teams.Length, mmxxiii.SeasonGames.Count);
-                Console.WriteLine("--------- SEASON ---------");
                 HashSet<Team> homeGames = new();
                 HashSet<Team> awayGames = new();
                 foreach (var seasonGame in mmxxiii.SeasonGames)
@@ -91,18 +90,36 @@ namespace Football
 
         // rank in order of most season tallies
         // in the event of a tie with season tallies the winner is determined by the difference in points scored by them vs the points scored against them
-        // [Theory]
-        // [MemberData(nameof(Teams))]
-        // public void TestRankTeams(Team[] teams)
-        // {
-        //     Season mmxxiii = new Season(teams);
-        //     mmxxiii.PlaySeasonGames();
-        //     Console.WriteLine(mmxxiii);
-        //     foreach (var team in mmxxiii.TallyTable)
-        //     {
-        //         continue;
-        //     }
-        // }
+        [Theory]
+        [MemberData(nameof(Teams))]
+        public void TestRankTeams(Team[] teams)
+        {
+            Season mmxxiii = new Season(teams);
+            mmxxiii.PlaySeasonGames();
+
+            Console.WriteLine("-------- Tally Table --------");
+            foreach (var team in mmxxiii.TallyTable.Keys)
+            {
+                Console.WriteLine($"{team} | Tallies: {mmxxiii.TallyTable[team].Talies} | Points: {mmxxiii.TallyTable[team].Points}");
+            };
+            Console.WriteLine("\n");
+
+            List<TeamRecord> TallyTableOrdered = mmxxiii.TallyTable.Values.ToList();
+
+            for (var i = 0; i < TallyTableOrdered.Count - 1; i++)
+            {
+                TeamRecord current = TallyTableOrdered[i];
+                TeamRecord next = TallyTableOrdered[i + 1];
+                if (current.Talies == next.Talies)
+                {
+                    Assert.True(current.Points >= next.Points);
+                }
+                else
+                {
+                    Assert.True(current.Talies >= next.Talies);
+                }
+            }
+        }
 
     }
 
@@ -110,7 +127,6 @@ namespace Football
     // *********************************
 
     /* 
-        in the event of a tie the winner is determined by the difference in points scored by them vs the points scored against them
         the league table should be available at any point in time with those who have played the most games ranked above those that have played less
         bonus points for keeping data private
     */
@@ -250,8 +266,8 @@ namespace Football
                 awayTeamRecord.Talies += 1;
             }
             _tallyTable
-            .OrderByDescending(team => team.Value.Talies)
-            .ThenByDescending(team => team.Value.Points);
+            .OrderByDescending(team => team.Value.Talies) // this is not working
+            .ThenByDescending(team => team.Value.Points); // this is not working
         }
 
         public override string ToString()

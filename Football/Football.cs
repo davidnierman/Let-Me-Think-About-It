@@ -1,10 +1,8 @@
-
-
-using System.ComponentModel;
-using System.Security.Cryptography.X509Certificates;
+using System.Linq.Expressions;
+using System.Reflection;
 using Xunit.Sdk;
 
-namespace FootballTests
+namespace Football
 {
     public class FootballTests
     {
@@ -12,21 +10,22 @@ namespace FootballTests
         // you have a set of teams identified by name (Chargers, Rams, Seahawks, 49ers, Raiders, Cardinals, Bronocs)
         public static IEnumerable<object[]> Teams => new object[][]
    {
-        new object[] { new Team[] { new Team("Chargers") } },
-        new object[] { new Team[] { new Team("Chargers"), new Team("Rams") } },
+        // new object[] { new Team[] { new Team("Chargers"), new Team("Chargers") } }, // how can I make this unique? and where should it be enforced? - how can you limit instances to not have the same properties?
         new object[] { new Team[] { new Team("Rams"), new Team("Chargers") } },
-        new object[] { new Team[] { new Team("Rams"), new Team("Chargers"), new Team("SeaHawks") } }
+        new object[] { new Team[] { new Team("Rams"), new Team("Chargers"), new Team("SeaHawks") } },
+        new object[] { new Team[] { new Team("Rams"), new Team("Chargers"), new Team("SeaHawks"), new Team("49ers") } }
    };
-
 
         [Fact]
         public void TestSetOfTeams()
         {
             Team chargers = new Team("Chargers");
+            Team chargers2 = new Team("Chargers");
             Team rams = new Team("Rams");
             Assert.IsType<Team>(chargers);
             Assert.IsType<Team>(rams);
             Assert.NotEqual(chargers, rams);
+            Assert.NotEqual(chargers, chargers2);
         }
 
         [Fact]
@@ -69,18 +68,34 @@ namespace FootballTests
         [MemberData(nameof(Teams))]
         public void TestCreateSeasonGames(Team[] teams)
         {
-            Season mmxxiii = new Season(teams);
-            var seasonGames = mmxxiii.CreateSeasonGames();
-            Assert.Equal(teams.Length, seasonGames.Count);
+            for (var i = 0; i < 10; i++)
+            {
+                Season mmxxiii = new Season(teams);
+                Assert.Equal(teams.Length, mmxxiii.SeasonGames.Count);
+                Console.WriteLine("--------- SEASON ---------");
+                foreach (var seasonGame in mmxxiii.SeasonGames)
+                {
+                    Assert.NotEqual(seasonGame.AwayTeam, seasonGame.HomeTeam);
+                    Console.WriteLine($"home: {seasonGame.HomeTeam} | away: {seasonGame.AwayTeam}");
+                }
+            }
+
         }
 
         // rank in order of most season tallies
         // in the event of a tie with season tallies the winner is determined by the difference in points scored by them vs the points scored against them
-        [Fact]
-        public void TestRankTeams()
-        {
-
-        }
+        // [Theory]
+        // [MemberData(nameof(Teams))]
+        // public void TestRankTeams(Team[] teams)
+        // {
+        //     Season mmxxiii = new Season(teams);
+        //     mmxxiii.PlaySeasonGames();
+        //     Console.WriteLine(mmxxiii);
+        //     foreach (var team in mmxxiii.TallyTable)
+        //     {
+        //         continue;
+        //     }
+        // }
 
     }
 
@@ -114,57 +129,98 @@ namespace FootballTests
 
         public Dictionary<Team, TeamRecord> TallyTable => _tallyTable;
 
+        readonly HashSet<Game> _seasonGames;
+
+        public HashSet<Game> SeasonGames => _seasonGames;
+
         public Season(Team[] teams)
         {
             foreach (var team in teams)
             {
                 _tallyTable.Add(team, new TeamRecord());
             }
+            _seasonGames = CreateSeasonGames();
         }
 
-        public class NeedMoreThanOneTeam : Exception
+        private HashSet<Game> CreateSeasonGames()
         {
-            public NeedMoreThanOneTeam(string message) : base(message) { }
-        }
-
-        public HashSet<Game> CreateSeasonGames()
-        {
-            HashSet<Game> SeasonGames = new();
+            HashSet<Game> seasonGames = new();
             List<Team> teamList = _tallyTable.Keys.ToList();
             Random rnd = new Random();
+
             if (teamList.Count < 2)
             {
-                throw new NeedMoreThanOneTeam($"{teamList[0]} is the only team in the season. They cannot play themselves!");
+                throw new Exception($"{teamList[0]} is the only team in the season. They cannot play themselves!");
             }
-            HashSet<int> awayGames = new();
-            for (int i = 0; i < teamList.Count;)
+
+            List<int> games = new List<int>(teamList.Count);
+
+            for (int homeTeam = 0; homeTeam < teamList.Count;)
             {
-                int randomIndex = rnd.Next(teamList.Count);
-                if (awayGames.Contains(randomIndex) || randomIndex == i)
+                bool playedBefore = false;
+                int randomAwayTeam = rnd.Next(teamList.Count); // I think we can make this more efficient in the last iteration to add the only away team left over
+                if (randomAwayTeam == homeTeam || games.Contains(randomAwayTeam))
                 {
                     continue;
                 }
+
+                if (teamList.Count % 2 == 0)
+                {
+
+
+                    bool sharedOpponent = false;
+
+                    if (randomAwayTeam < games.Count)
+                    {
+                        int awayTeamOtherOpponent = games[randomAwayTeam];
+
+                        if (awayTeamOtherOpponent < games.Count)
+                        {
+                            int awayTeamOtherOpponentOtherOpponent = games[awayTeamOtherOpponent];
+                            sharedOpponent = awayTeamOtherOpponentOtherOpponent == homeTeam;
+                            playedBefore = awayTeamOtherOpponent == homeTeam;
+                        }
+                    }
+
+
+                    if (!sharedOpponent && !playedBefore)
+                    {
+                        Game game = new Game(teamList[homeTeam], teamList[randomAwayTeam]);
+                        seasonGames.Add(game);
+                        games.Add(randomAwayTeam);
+                        homeTeam++;
+                    }
+                }
                 else
                 {
-                    Game game = new Game(teamList[i], teamList[randomIndex]);
-                    SeasonGames.Add(game);
-                    awayGames.Add(randomIndex);
-                    i++;
+                    if (randomAwayTeam < games.Count)
+                    {
+                        int awayTeamOtherOpponent = games[randomAwayTeam];
+                        playedBefore = awayTeamOtherOpponent == homeTeam;
+                    }
+
+                    if (!playedBefore)
+                    {
+                        Game game = new Game(teamList[homeTeam], teamList[randomAwayTeam]);
+                        seasonGames.Add(game);
+                        games.Add(randomAwayTeam);
+                        homeTeam++;
+                    }
                 }
             }
-            return SeasonGames;
+
+            return seasonGames;
         }
 
-        public Game PlayGame(Team homeTeam, Team awayTeam)
+        public void PlaySeasonGames()
         {
-            Game g = new Game(homeTeam, awayTeam);
-            g.Play();
-            return g;
+            foreach (var game in _seasonGames)
+            {
+                game.Play();
+                AddSeasonPoints(game);
+            }
         }
 
-
-
-        // I want the below method private, but cannot test if it is...
         public void AddSeasonPoints(Game game)
         {
             var homeTeamRecord = _tallyTable[game.HomeTeam];
@@ -186,8 +242,22 @@ namespace FootballTests
                 homeTeamRecord.Talies += 1;
                 awayTeamRecord.Talies += 1;
             }
-
+            _tallyTable
+            .OrderByDescending(team => team.Value.Talies)
+            .ThenByDescending(team => team.Value.Points);
         }
+
+        public override string ToString()
+        {
+            string TallyTable = "";
+
+            foreach (var rankedEntry in _tallyTable)
+            {
+                TallyTable += $"{rankedEntry.Key} | Talies: {rankedEntry.Value.Talies} | Points: {rankedEntry.Value.Points} \n";
+            }
+            return TallyTable;
+        }
+
 
 
         public class Game
@@ -236,20 +306,20 @@ namespace FootballTests
 
             }
         }
-        public class TeamRecord
-        {
-
-            public int Talies;
-            public int Points;
-
-        }
-
-
-
+    }
+    public class TeamRecord
+    {
+        public int Talies;
+        public int Points;
 
     }
 
+
+
+
 }
+
+
 
 
 

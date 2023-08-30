@@ -59,8 +59,8 @@ namespace Football
             Assert.Equal(game.AwayTeamPoints > game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies - 3 == mmxxiii.TallyTable[chargers].Talies); // learned probability kata
             Assert.Equal(game.AwayTeamPoints < game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies + 2 == mmxxiii.TallyTable[chargers].Talies); // learned probability kata
             Assert.Equal(game.AwayTeamPoints == game.HomeTeamPoints, mmxxiii.TallyTable[rams] == mmxxiii.TallyTable[chargers]);
-            Assert.Equal(mmxxiii.TallyTable[chargers].Points, game.HomeTeamPoints - game.AwayTeamPoints);
-            Assert.Equal(mmxxiii.TallyTable[rams].Points, game.AwayTeamPoints - game.HomeTeamPoints);
+            Assert.Equal(mmxxiii.TallyTable[chargers].Points, game.HomeTeamPoints - game.AwayTeamPoints); // is this right way to test this?
+            Assert.Equal(mmxxiii.TallyTable[rams].Points, game.AwayTeamPoints - game.HomeTeamPoints); // is this right way to test this?
         }
 
         // each season every team plays one game at home and one game away
@@ -118,6 +118,13 @@ namespace Football
                     Assert.True(current.Talies >= next.Talies);
                 }
             }
+
+            Console.WriteLine("-------- Season Games --------");
+            foreach (var game in mmxxiii.SeasonGames)
+            {
+                Console.WriteLine(game);
+            }
+            Console.WriteLine("\n");
         }
 
     }
@@ -250,8 +257,8 @@ namespace Football
             var homeTeamRecord = _tallyTable[game.HomeTeam];
             var awayTeamRecord = _tallyTable[game.AwayTeam];
 
-            homeTeamRecord.Points = game.HomeTeamPoints - game.AwayTeamPoints;
-            awayTeamRecord.Points = game.AwayTeamPoints - game.HomeTeamPoints;
+            homeTeamRecord.Points += game.HomeTeamPoints - game.AwayTeamPoints;
+            awayTeamRecord.Points += game.AwayTeamPoints - game.HomeTeamPoints;
 
             if (game.HomeTeamPoints > game.AwayTeamPoints)
             {
@@ -326,6 +333,11 @@ namespace Football
                     throw new GameAlreadyPlayed($"{_homeTeam} already played the {_awayTeam} at home");
                 }
 
+            }
+
+            public override string ToString()
+            {
+                return $"home: {_homeTeam} {_homeTeamPoints} | away: {_awayTeam} {_awayTeamPoints}";
             }
         }
     }

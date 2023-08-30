@@ -98,18 +98,17 @@ namespace Football
             mmxxiii.PlaySeasonGames();
 
             Console.WriteLine("-------- Tally Table --------");
-            foreach (var team in mmxxiii.TallyTable.Keys)
+            foreach (var team in mmxxiii.RankededTallyTable)
             {
-                Console.WriteLine($"{team} | Tallies: {mmxxiii.TallyTable[team].Talies} | Points: {mmxxiii.TallyTable[team].Points}");
+                Console.WriteLine($"{team.Key} | Tallies: {team.Value.Talies} | Points: {team.Value.Points}");
             };
             Console.WriteLine("\n");
 
-            List<TeamRecord> TallyTableOrdered = mmxxiii.TallyTable.Values.ToList();
-
-            for (var i = 0; i < TallyTableOrdered.Count - 1; i++)
+            var OrderedTallyTable = mmxxiii.RankededTallyTable.ToList();
+            for (var i = 0; i < OrderedTallyTable.Count - 1; i++)
             {
-                TeamRecord current = TallyTableOrdered[i];
-                TeamRecord next = TallyTableOrdered[i + 1];
+                TeamRecord current = OrderedTallyTable[i].Value;
+                TeamRecord next = OrderedTallyTable[i + 1].Value;
                 if (current.Talies == next.Talies)
                 {
                     Assert.True(current.Points >= next.Points);
@@ -151,6 +150,8 @@ namespace Football
         private Dictionary<Team, TeamRecord> _tallyTable = new Dictionary<Team, TeamRecord>();
 
         public Dictionary<Team, TeamRecord> TallyTable => _tallyTable;
+
+        public IOrderedEnumerable<KeyValuePair<Team, TeamRecord>> RankededTallyTable;
 
         readonly HashSet<Game> _seasonGames;
 
@@ -265,9 +266,7 @@ namespace Football
                 homeTeamRecord.Talies += 1;
                 awayTeamRecord.Talies += 1;
             }
-            _tallyTable
-            .OrderByDescending(team => team.Value.Talies) // this is not working
-            .ThenByDescending(team => team.Value.Points); // this is not working
+            RankededTallyTable = _tallyTable.OrderByDescending(team => team.Value.Talies).ThenByDescending(team => team.Value.Points); // this is not working
         }
 
         public override string ToString()

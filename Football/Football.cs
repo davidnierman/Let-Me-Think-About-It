@@ -56,11 +56,18 @@ namespace Football
             Season.Game game = new(chargers, rams);
             game.Play();
             mmxxiii.AddSeasonPoints(game);
-            Assert.Equal(game.AwayTeamPoints > game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies - 3 == mmxxiii.TallyTable[chargers].Talies); // learned probability kata
-            Assert.Equal(game.AwayTeamPoints < game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies + 2 == mmxxiii.TallyTable[chargers].Talies); // learned probability kata
+            Assert.Equal(game.AwayTeamPoints > game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies - 3 == mmxxiii.TallyTable[chargers].Talies);
+            Assert.Equal(game.AwayTeamPoints < game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies + 2 == mmxxiii.TallyTable[chargers].Talies);
             Assert.Equal(game.AwayTeamPoints == game.HomeTeamPoints, mmxxiii.TallyTable[rams] == mmxxiii.TallyTable[chargers]);
-            Assert.Equal(mmxxiii.TallyTable[chargers].Points, game.HomeTeamPoints - game.AwayTeamPoints); // is this right way to test this?
-            Assert.Equal(mmxxiii.TallyTable[rams].Points, game.AwayTeamPoints - game.HomeTeamPoints); // is this right way to test this?
+            Assert.Equal(mmxxiii.TallyTable[chargers].Points, game.HomeTeamPoints - game.AwayTeamPoints);
+            Assert.Equal(mmxxiii.TallyTable[rams].Points, game.AwayTeamPoints - game.HomeTeamPoints);
+
+            mmxxiii.AddSeasonPoints(game);
+            Assert.Equal(game.AwayTeamPoints > game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies - 6 == mmxxiii.TallyTable[chargers].Talies);
+            Assert.Equal(game.AwayTeamPoints < game.HomeTeamPoints, mmxxiii.TallyTable[rams].Talies + 4 == mmxxiii.TallyTable[chargers].Talies);
+            Assert.Equal(game.AwayTeamPoints == game.HomeTeamPoints, mmxxiii.TallyTable[rams] == mmxxiii.TallyTable[chargers]);
+            Assert.Equal(mmxxiii.TallyTable[chargers].Points, (game.HomeTeamPoints - game.AwayTeamPoints) * 2);
+            Assert.Equal(mmxxiii.TallyTable[rams].Points, (game.AwayTeamPoints - game.HomeTeamPoints) * 2);
         }
 
         // each season every team plays one game at home and one game away
@@ -139,7 +146,7 @@ namespace Football
 
     public class Team
     {
-        private string _name;
+        private readonly string _name;
 
         public Team(string Name)
         {
@@ -154,15 +161,13 @@ namespace Football
 
     class Season
     {
-        private Dictionary<Team, TeamRecord> _tallyTable = new Dictionary<Team, TeamRecord>();
+        private readonly Dictionary<Team, TeamRecord> _tallyTable = new();
 
         public Dictionary<Team, TeamRecord> TallyTable => _tallyTable;
 
         public IOrderedEnumerable<KeyValuePair<Team, TeamRecord>> RankededTallyTable;
 
-        readonly HashSet<Game> _seasonGames;
-
-        public HashSet<Game> SeasonGames => _seasonGames;
+        public HashSet<Game> SeasonGames { get; }
 
         public Season(Team[] teams)
         {
@@ -170,7 +175,8 @@ namespace Football
             {
                 _tallyTable.Add(team, new TeamRecord());
             }
-            _seasonGames = CreateSeasonGames();
+            SeasonGames = CreateSeasonGames();
+            RankededTallyTable = _tallyTable.OrderByDescending(team => team.Value.Talies).ThenByDescending(team => team.Value.Points);
         }
 
         private HashSet<Game> CreateSeasonGames()
@@ -245,7 +251,7 @@ namespace Football
 
         public void PlaySeasonGames()
         {
-            foreach (var game in _seasonGames)
+            foreach (var game in SeasonGames)
             {
                 game.Play();
                 AddSeasonPoints(game);
@@ -273,7 +279,7 @@ namespace Football
                 homeTeamRecord.Talies += 1;
                 awayTeamRecord.Talies += 1;
             }
-            RankededTallyTable = _tallyTable.OrderByDescending(team => team.Value.Talies).ThenByDescending(team => team.Value.Points); // this is not working
+            RankededTallyTable = _tallyTable.OrderByDescending(team => team.Value.Talies).ThenByDescending(team => team.Value.Points);
         }
 
         public override string ToString()

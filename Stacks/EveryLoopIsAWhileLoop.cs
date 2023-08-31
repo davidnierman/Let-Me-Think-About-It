@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace StacksTests
 {
     public class EveryLoopIsAWhileLoop
@@ -157,5 +159,61 @@ namespace StacksTests
             Assert.Equal("Charlie", currentName);
             Assert.Equal(28, currentAge);
         }
+        [Fact]
+        public void CustomEnumerator()
+        {
+            Bird duck = new(1, 2);
+            int i = 1;
+
+            while (duck.MoveNext())
+            {
+                Assert.Equal(i, duck.Current);
+                i++;
+            }
+        }
+        [Fact]
+        public void CustomEnumeratoForEachr()
+        {
+            Bird duck = new(1, 2);
+            int i = 1;
+
+            foreach (var d in duck)
+            {
+                Assert.Equal(i, d);
+                i++;
+            }
+        }
     }
+}
+
+
+class Bird : IEnumerable, IEnumerator
+{
+    public int A;
+    public int B;
+
+    private int _counter;
+
+    public Bird(int a, int b)
+    {
+        A = a;
+        B = b;
+        _counter = -1;
+    }
+
+
+    public object Current => GetType().GetFields()[_counter].GetValue(this);
+
+    public bool MoveNext()
+    {
+        _counter += 1;
+        return _counter < 2;
+    }
+
+    public void Reset()
+    {
+        throw new NotImplementedException();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => this;
 }

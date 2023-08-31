@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 
 namespace StacksTests
 {
@@ -162,19 +163,31 @@ namespace StacksTests
         [Fact]
         public void CustomEnumerator()
         {
-            Bird duck = new(1, 2);
+            Bird bird = new(1, 2);
             int i = 1;
 
-            while (duck.MoveNext())
+            while (bird.MoveNext())
             {
-                Assert.Equal(i, duck.Current);
+                Assert.Equal(i, bird.Current);
                 i++;
             }
         }
         [Fact]
         public void CustomEnumeratoForEachr()
         {
-            Bird duck = new(1, 2);
+            Bird bird = new(1, 2);
+            int i = 1;
+
+            foreach (var d in bird)
+            {
+                Assert.Equal(i, d);
+                i++;
+            }
+        }
+        [Fact]
+        public void CustomEnumeratoForEachDuck()
+        {
+            Duck duck = new(1, 2);
             int i = 1;
 
             foreach (var d in duck)
@@ -186,6 +199,35 @@ namespace StacksTests
     }
 }
 
+
+
+class Duck
+{
+    public int A;
+    public int B;
+
+    private int _counter;
+
+    public Duck(int a, int b)
+    {
+        A = a;
+        B = b;
+        _counter = -1;
+    }
+
+    public object Current => GetType().GetFields()[_counter].GetValue(this);
+
+    public bool MoveNext()
+    {
+        _counter += 1;
+        return _counter < 2;
+    }
+
+    public Duck GetEnumerator()
+    {
+        return this;
+    }
+}
 
 class Bird : IEnumerable, IEnumerator
 {

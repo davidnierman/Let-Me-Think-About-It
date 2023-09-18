@@ -39,6 +39,7 @@ while (stack.Count < 10)
 }
 
 
+
 while (stack.Count > 0)
 {
     Console.WriteLine($"contents: {stack.Pop()} count: {stack.Count}");

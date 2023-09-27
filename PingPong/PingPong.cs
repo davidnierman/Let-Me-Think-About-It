@@ -158,16 +158,13 @@ public class Sink
     public void Route(Message message, Machine sender)
     {
         _counter++;
-        if (_counter > 3)
+        if (_counter > 4)
         {
             return;
         }
         foreach (Machine machine in _messageSubcriptions[message.GetType()])
         {
-            //if (machine == sender)
-            //{
-            //  continue;
-            //}
+            if (machine == sender) { continue; }
             machine.ReceiveMessage(message);
         }
 

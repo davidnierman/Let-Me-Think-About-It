@@ -33,9 +33,9 @@ public class PingPongTests
     {
         var ping = new Message("ping");
         var pong = new Message("pong");
-        var sink = new Sink();
-        var machine1 = new Machine(ping, sink, _logger);
-        var machine2 = new Machine(pong, sink, _logger);
+        var sink = new Sink(_logger);
+        var machine1 = new Machine("pinger", ping, sink, _logger);
+        var machine2 = new Machine("ponger", pong, sink, _logger);
         Assert.True(sink.SubscribeToAll(machine1));
         Assert.True(sink.SubscribeToAll(machine2));
         machine1.SendMessageToEveryone(sink);
@@ -48,12 +48,14 @@ public class PingPongTests
         var ping = new Message("ping");
         var pong = new Message("pong");
         var emergencyPing = new UrgentMessage("ping!!!!");
-        var sink = new Sink();
-        var machine1 = new Machine(ping, sink, _logger);
-        var machine2 = new Machine(pong, sink, _logger);
+        var sink = new Sink(_logger);
+        var machine1 = new Machine("pinger", ping, sink, _logger);
+        var machine2 = new Machine("ponger", pong, sink, _logger);
         sink.SubscribeToMessageType(machine2, emergencyPing);
         sink.SubscribeToMessageType(machine1, emergencyPing);
+        machine1.TogglePower();
         machine1.SendMessageToMessageSubscribers(sink, emergencyPing);
+        machine1.TogglePower(); // this does not work yet --> likely need async!
     }
 }
 
@@ -86,13 +88,24 @@ public class Message
 
 public class Machine
 {
+    private readonly string _name;
     private readonly Message _defaultMessage;
     private readonly Sink _sink;
     private readonly ILogger _logger;
+    private bool _online = true;
+    public string Name => _name;
 
+    public bool Online => _online;
 
-    public Machine(Message defaultMessage, Sink sink, ILogger logger)
+    public void TogglePower()
     {
+        _online = !_online;
+    }
+
+
+    public Machine(string name, Message defaultMessage, Sink sink, ILogger logger)
+    {
+        _name = name;
         _defaultMessage = defaultMessage;
         _sink = sink;
         _logger = logger;
@@ -103,23 +116,32 @@ public class Machine
         sink.Broadcast(_defaultMessage, this);
     }
 
-    public void SendMessageToMessageSubscribers(Sink sink, Message message)
+    public bool SendMessageToMessageSubscribers(Sink sink, Message message)
     {
-        sink.Route(message, this);
+        return sink.Route(message, this);
     }
 
-    public void ReceiveMessage(Message message)
+    public bool ReceiveMessage(Message message)
     {
+        if (!_online)
+        {
+            return false;
+        }
+
         _logger.WriteLine($"{_defaultMessage.M} received {message.M}");
         if (message is UrgentMessage)
         {
-            SendMessageToMessageSubscribers(_sink, message);
+            return SendMessageToMessageSubscribers(_sink, message);
+        }
+        else if (message is Message)
+        {
+            SendMessageToEveryone(_sink);
+            return true;
         }
         else
         {
-            SendMessageToEveryone(_sink);
+            throw new InvalidOperationException("Not implemented");
         }
-
     }
 }
 
@@ -127,13 +149,14 @@ public class Sink
 {
 
     private int _counter = 0;
-
+    private readonly ILogger _logger;
     private readonly List<Machine> _machines;
 
     private readonly Dictionary<Type, List<Machine>> _messageSubcriptions;
 
-    public Sink()
+    public Sink(ILogger logger)
     {
+        _logger = logger;
         _machines = new();
         _messageSubcriptions = new();
     }
@@ -155,19 +178,28 @@ public class Sink
         }
     }
 
-    public void Route(Message message, Machine sender)
+    public bool Route(Message message, Machine sender)
     {
         _counter++;
         if (_counter > 4)
         {
-            return;
+            return true;
         }
         foreach (Machine machine in _messageSubcriptions[message.GetType()])
         {
             if (machine == sender) { continue; }
-            machine.ReceiveMessage(message);
+            bool received = machine.ReceiveMessage(message);
+            var _counter = 0;
+            while (!received && _counter < 5)
+            {
+                _logger.WriteLine($"waiting for {machine.Name} to back on...");
+                Thread.Sleep(2000);
+                received = machine.ReceiveMessage(message);
+                _counter++;
+                continue;
+            };
         }
-
+        return true;
     }
 
     public bool SubscribeToAll(Machine machine)

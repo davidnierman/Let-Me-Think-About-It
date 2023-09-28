@@ -221,7 +221,7 @@ public class Sink
             if (machine == sender) { continue; }
             try
             {
-                // I think I need to pull the machine out of this equation to loosen up the coupling.. Maybe Receive Message should be async and awaited and if it times out then it is assummed offline
+                // Timers, States and unique ids will allow decoupling. As long as the machine holds states and can respond or not respond to them in x amount of time. The Unique Ids help know what task is completed/responded to
                 machine.ReceiveMessage(message); // what to have the machine return if it is offline. It cannot return. so lack of returning? or throwing an exception. How does an offline machine throw an exception
                 _counter = 0;
             }

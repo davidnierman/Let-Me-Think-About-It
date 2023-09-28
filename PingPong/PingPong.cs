@@ -221,6 +221,7 @@ public class Sink
             if (machine == sender) { continue; }
             try
             {
+                // I think I need to pull the machine out of this equation to loosen up the coupling.. Maybe Receive Message should be async and awaited and if it times out then it is assummed offline
                 machine.ReceiveMessage(message); // what to have the machine return if it is offline. It cannot return. so lack of returning? or throwing an exception. How does an offline machine throw an exception
                 _counter = 0;
             }

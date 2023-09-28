@@ -43,7 +43,7 @@ public class PingPongTests
     }
 
     [Fact]
-    public void SubscribeToMessageTypes()
+    public async Task SubscribeToMessageTypesAsync()
     {
         var ping = new Message("ping");
         var pong = new Message("pong");
@@ -54,8 +54,13 @@ public class PingPongTests
         sink.SubscribeToMessageType(machine2, emergencyPing);
         sink.SubscribeToMessageType(machine1, emergencyPing);
         machine1.TogglePower();
-        machine1.SendMessageToMessageSubscribers(sink, emergencyPing);
-        machine1.TogglePower(); // this does not work yet --> likely need async!
+        var messageSent = machine1.SendMessageToMessageSubscribers(sink, emergencyPing);
+        await Task.Delay(3000);
+        machine1.TogglePower();
+        machine2.TogglePower();
+        await Task.Delay(3000);
+        machine2.TogglePower();
+        await messageSent; // awesome it is working! Next step is figuring out how to confirm the message was received!
     }
 }
 
@@ -116,12 +121,12 @@ public class Machine
         sink.Broadcast(_defaultMessage, this);
     }
 
-    public bool SendMessageToMessageSubscribers(Sink sink, Message message)
+    public async Task<bool> SendMessageToMessageSubscribers(Sink sink, Message message)
     {
-        return sink.Route(message, this);
+        return await sink.Route(message, this);
     }
 
-    public bool ReceiveMessage(Message message)
+    public async Task<bool> ReceiveMessage(Message message)
     {
         if (!_online)
         {
@@ -131,7 +136,7 @@ public class Machine
         _logger.WriteLine($"{_defaultMessage.M} received {message.M}");
         if (message is UrgentMessage)
         {
-            return SendMessageToMessageSubscribers(_sink, message);
+            return await SendMessageToMessageSubscribers(_sink, message);
         }
         else if (message is Message)
         {
@@ -178,7 +183,7 @@ public class Sink
         }
     }
 
-    public bool Route(Message message, Machine sender)
+    public async Task<bool> Route(Message message, Machine sender)
     {
         _counter++;
         if (_counter > 4)
@@ -188,15 +193,10 @@ public class Sink
         foreach (Machine machine in _messageSubcriptions[message.GetType()])
         {
             if (machine == sender) { continue; }
-            bool received = machine.ReceiveMessage(message);
-            var _counter = 0;
-            while (!received && _counter < 5)
+            while (!await machine.ReceiveMessage(message))
             {
-                _logger.WriteLine($"waiting for {machine.Name} to back on...");
-                Thread.Sleep(2000);
-                received = machine.ReceiveMessage(message);
-                _counter++;
-                continue;
+                _logger.WriteLine($"waiting for {machine.Name} to turn back on...");
+                await Task.Delay(1000);
             };
         }
         return true;

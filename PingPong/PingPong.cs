@@ -60,7 +60,7 @@ public class PingPongTests
         machine2.TogglePower();
         await Task.Delay(3000);
         machine2.TogglePower();
-        await messageSent; // awesome it is working! Next step is figuring out how to confirm the message was received!
+        Assert.True(await messageSent);
     }
 }
 
@@ -77,7 +77,6 @@ public interface ILogger
 {
     public void WriteLine(string message);
 }
-
 
 public class Message
 {

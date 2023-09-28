@@ -43,7 +43,17 @@ public class PingPongTests
     }
 
     [Fact]
-    public async Task SubscribeToMessageTypesAsync()
+    public void SendAndForgetMessage()
+    {
+        var ping = new Message("ping");
+        var emergencyPing = new UrgentMessage("ping!!!!");
+        var sink = new Sink(_logger);
+        var machine1 = new Machine("pinger", ping, sink, _logger);
+        machine1.SendMessageToMessageSubscribers(sink, emergencyPing);
+    }
+
+    [Fact]
+    public async void RouteMessage()
     {
         var ping = new Message("ping");
         var pong = new Message("pong");
@@ -52,15 +62,31 @@ public class PingPongTests
         var machine1 = new Machine("pinger", ping, sink, _logger);
         var machine2 = new Machine("ponger", pong, sink, _logger);
         sink.SubscribeToMessageType(machine2, emergencyPing);
-        sink.SubscribeToMessageType(machine1, emergencyPing);
-        machine1.TogglePower();
-        var messageSent = machine1.SendMessageToMessageSubscribers(sink, emergencyPing);
-        await Task.Delay(3000);
-        machine1.TogglePower();
+        Assert.True(await sink.RouteAsync(emergencyPing, machine2));
         machine2.TogglePower();
-        await Task.Delay(3000);
+        var sentResult = sink.RouteAsync(emergencyPing, machine1); // starts task here?
+        await Task.Delay(2500);
         machine2.TogglePower();
-        Assert.True(await messageSent);
+        Assert.True(await sentResult);
+    }
+
+
+    [Fact]
+    public async void RouteMessageMaxingOutRetries()
+    {
+        var ping = new Message("ping");
+        var pong = new Message("pong");
+        var emergencyPing = new UrgentMessage("ping!!!!");
+        var sink = new Sink(_logger);
+        var machine1 = new Machine("pinger", ping, sink, _logger);
+        var machine2 = new Machine("ponger", pong, sink, _logger);
+        sink.SubscribeToMessageType(machine2, emergencyPing);
+        Assert.True(await sink.RouteAsync(emergencyPing, machine2));
+        machine2.TogglePower();
+        var sentResult = sink.RouteAsync(emergencyPing, machine1); // starts task here?
+        await Task.Delay(6000);
+        machine2.TogglePower();
+        Assert.False(await sentResult);
     }
 }
 
@@ -106,7 +132,6 @@ public class Machine
         _online = !_online;
     }
 
-
     public Machine(string name, Message defaultMessage, Sink sink, ILogger logger)
     {
         _name = name;
@@ -120,22 +145,23 @@ public class Machine
         sink.Broadcast(_defaultMessage, this);
     }
 
-    public async Task<bool> SendMessageToMessageSubscribers(Sink sink, Message message)
+    public void SendMessageToMessageSubscribers(Sink sink, Message message)
     {
-        return await sink.Route(message, this);
+        sink.RouteAsync(message, this);
     }
 
-    public async Task<bool> ReceiveMessage(Message message)
+    public bool ReceiveMessage(Message message)
     {
         if (!_online)
         {
-            return false;
+            throw new Exception("offline"); // "technically" not returning anything
         }
 
         _logger.WriteLine($"{_defaultMessage.M} received {message.M}");
         if (message is UrgentMessage)
         {
-            return await SendMessageToMessageSubscribers(_sink, message);
+            SendMessageToMessageSubscribers(_sink, message);
+            return true;
         }
         else if (message is Message)
         {
@@ -153,6 +179,7 @@ public class Sink
 {
 
     private int _counter = 0;
+    private int _maxNumberOfRetries = 5;
     private readonly ILogger _logger;
     private readonly List<Machine> _machines;
 
@@ -182,21 +209,27 @@ public class Sink
         }
     }
 
-    public async Task<bool> Route(Message message, Machine sender)
+    public async Task<bool> RouteAsync(Message message, Machine sender)
     {
         _counter++;
-        if (_counter > 4)
+        if (_counter > _maxNumberOfRetries)
         {
-            return true;
+            return false;
         }
         foreach (Machine machine in _messageSubcriptions[message.GetType()])
         {
             if (machine == sender) { continue; }
-            while (!await machine.ReceiveMessage(message))
+            try
             {
-                _logger.WriteLine($"waiting for {machine.Name} to turn back on...");
+                machine.ReceiveMessage(message); // what to have the machine return if it is offline. It cannot return. so lack of returning? or throwing an exception. How does an offline machine throw an exception
+                _counter = 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLine($"{machine.Name} is {ex.Message}");
                 await Task.Delay(1000);
-            };
+                return await RouteAsync(message, sender);
+            }
         }
         return true;
     }

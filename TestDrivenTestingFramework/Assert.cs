@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TestDrivenTestingFramework
+﻿namespace TestDrivenTestingFramework
 {
     internal static class Assert
     {
@@ -26,6 +20,16 @@ namespace TestDrivenTestingFramework
             }
         }
 
+        public static void True(bool value)
+        {
+            if (!value) throw new Exception("Expected true");
+        }
+
+        public static void False(bool value)
+        {
+            if (value) throw new Exception("Expected false");
+        }
+
         public static void Equal(string expected, string actual)
         {
             if (expected != actual)
@@ -36,6 +40,38 @@ namespace TestDrivenTestingFramework
         {
             if (expected != actual)
                 throw new Exception($"Expected '{expected}' but got '{actual}'");
+        }
+
+        public static void Equal<T>(T expected, T actual) where T : Enum
+        {
+            if (!expected.Equals(actual))
+            {
+                throw new Exception($"Expected '{expected}' but got '{actual}'");
+            }
+        }
+
+        public static void Collection<T>(IEnumerable<T> collection, params Action<T>[] actions)
+        {
+            List<Exception> errors = new List<Exception>();
+            foreach (var item in collection)
+            {
+                foreach (var action in actions)
+                {
+                    try
+                    {
+                        action(item);
+                    }
+                    catch (Exception e)
+                    {
+                        errors.Add(e);
+                    }
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                throw new AggregateException(errors);
+            }
         }
     }
 }

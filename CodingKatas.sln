@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoopsAndDataStructures", "L
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArraysAndSorting", "ArraysAndSorting\ArraysAndSorting.csproj", "{A5E17191-0130-4491-8D09-726BB023F69C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestDrivenTestingFramework", "TestDrivenTestingFramework\TestDrivenTestingFramework.csproj", "{575A07B1-E6A2-4FE1-B27E-B91471B2CD00}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDrivenTestingFramework", "TestDrivenTestingFramework\TestDrivenTestingFramework.csproj", "{575A07B1-E6A2-4FE1-B27E-B91471B2CD00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReallyUsingTestFrameworks", "ReallyUsingTestFrameworks\ReallyUsingTestFrameworks.csproj", "{869F4517-4DB3-4944-8183-E31FB3B25539}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{575A07B1-E6A2-4FE1-B27E-B91471B2CD00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{575A07B1-E6A2-4FE1-B27E-B91471B2CD00}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{575A07B1-E6A2-4FE1-B27E-B91471B2CD00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{869F4517-4DB3-4944-8183-E31FB3B25539}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{869F4517-4DB3-4944-8183-E31FB3B25539}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{869F4517-4DB3-4944-8183-E31FB3B25539}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{869F4517-4DB3-4944-8183-E31FB3B25539}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

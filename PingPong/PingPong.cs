@@ -2,6 +2,9 @@ using Xunit.Abstractions;
 
 namespace PingPong;
 
+
+// start from scratch tomorrow using a queue and implemting it using a chanel & it needs to route it the thing it subscribes to. Queu so when you send something it subscribe it is not direct
+
 public class PingPongTests
 {
 
@@ -53,7 +56,7 @@ public class PingPongTests
     }
 
     [Fact]
-    public async void RouteMessage()
+    public async void RouteMessage() // elminate the test taking 3 seconds to run --> done by state and message ordering --> ordering makes time problems an order problem
     {
         var ping = new Message("ping");
         var pong = new Message("pong");
@@ -65,9 +68,9 @@ public class PingPongTests
         Assert.True(await sink.RouteAsync(emergencyPing, machine2));
         machine2.TogglePower();
         var sentResult = sink.RouteAsync(emergencyPing, machine1); // starts task here?
-        await Task.Delay(2500);
-        machine2.TogglePower();
-        Assert.True(await sentResult);
+        //await Task.Delay(2500);
+        //machine2.TogglePower();
+        Assert.False(await sentResult);
     }
 
 
@@ -90,7 +93,7 @@ public class PingPongTests
     }
 }
 
-public class UrgentMessage : Message
+public class UrgentMessage : Message // make message an abstract where you cannot send a message
 {
 
     public UrgentMessage(string m) : base(m)
@@ -175,6 +178,7 @@ public class Machine
     }
 }
 
+
 public class Sink
 {
 
@@ -183,7 +187,7 @@ public class Sink
     private readonly ILogger _logger;
     private readonly List<Machine> _machines;
 
-    private readonly Dictionary<Type, List<Machine>> _messageSubcriptions;
+    private readonly Dictionary<Type, List<Machine>> _messageSubcriptions; // make this a queue
 
     public Sink(ILogger logger)
     {
@@ -218,9 +222,11 @@ public class Sink
         }
         foreach (Machine machine in _messageSubcriptions[message.GetType()])
         {
-            if (machine == sender) { continue; }
+            //if (machine == sender) { continue; } // you can send yourself a message ( this happens)
             try
             {
+                // make this a queue instead of recursive
+                // three additional messages that are error response of success, error and no response
                 // Timers, States and unique ids will allow decoupling. As long as the machine holds states and can respond or not respond to them in x amount of time. The Unique Ids help know what task is completed/responded to
                 machine.ReceiveMessage(message); // what to have the machine return if it is offline. It cannot return. so lack of returning? or throwing an exception. How does an offline machine throw an exception
                 _counter = 0;

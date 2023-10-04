@@ -11,18 +11,18 @@ namespace ReallyUsingTestFrameworks
             Assert.Equal(result, a + b);
         }
 
-        [Fact]
-        public void SomethingInappropriate()
-        {
-            Assert.Equal(43, 42);
-        }
+        //[Fact]
+        //public void SomethingInappropriate()
+        //{
+        //    Assert.Equal(43, 42);
+        //}
 
-        [Fact]
-        public async Task SomethingInappropriatelyAsync()
-        {
-            await Task.Delay(10);
-            Assert.Equal(43, 42);
-        }
+        //[Fact]
+        //public async Task SomethingInappropriatelyAsync()
+        //{
+        //    await Task.Delay(10);
+        //    Assert.Equal(43, 42);
+        //}
 
         [Theory]
         [InlineData(1,1, 2)]

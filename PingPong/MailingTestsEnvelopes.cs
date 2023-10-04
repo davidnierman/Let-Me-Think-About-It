@@ -7,17 +7,16 @@
         public void MachineStates()
         {
             var stateMachine = new Resident("some address");
-            Assert.Equal(MachineState.Active, stateMachine.State);
+            Assert.Equal(A.Active, stateMachine.State);
             stateMachine.Deactivate();
-            Assert.Equal(MachineState.Inactive, stateMachine.State);
+            Assert.Equal(A.Inactive, stateMachine.State);
             stateMachine.Deactivate();
-            Assert.Equal(MachineState.Inactive, stateMachine.State);
+            Assert.Equal(A.Inactive, stateMachine.State);
             stateMachine.Activate();
-            Assert.Equal(MachineState.Active, stateMachine.State);
+            Assert.Equal(A.Active, stateMachine.State);
             stateMachine.Activate();
-            Assert.Equal(MachineState.Active, stateMachine.State);
+            Assert.Equal(A.Active, stateMachine.State);
         }
-
 
         [Fact]
         public void CreateEnvelope()
@@ -69,43 +68,43 @@
             letterCreator.SendEnvelope(envelopeCenter); // this is an envelope with a letter
             envelopeCenter.DeliverEnvelope();
             resident.ProcessEnvelope();
-            Assert.Equal(MachineState.Inactive, resident.State);
+            Assert.Equal(A.Inactive, resident.State);
         }
 
     }
 
     [Flags]
-    public enum MachineState
+    public enum A
     {
         Inactive = 0,
         Active = 1
     }
-    public abstract class StateMachine
+    public abstract class AThing
     {
-        private MachineState _state = MachineState.Active;
+        private A _state = A.Active;
 
-        public MachineState State => _state;
+        public A State => _state;
 
         public void Activate()
         {
-            _state = MachineState.Active;
+            _state = A.Active;
         }
 
         public void Deactivate()
         {
-            _state = MachineState.Inactive;
+            _state = A.Inactive;
 
         }
-    }
-    public class EnvelopeCreator : StateMachine
+    } // I don't need this as an abstract. I need an interface to extract methods
+    public class EnvelopeCreator : AThing
     {
-        protected Queue<Envelope> _outbox = new Queue<Envelope>();
+        protected Queue<E> _outbox = new Queue<E>();
 
-        public Queue<Envelope> Outbox => _outbox;
+        public Queue<E> Outbox => _outbox;
 
         public void CreateEnvelope(Resident DestinationResident)
         {
-            _outbox.Enqueue(new Envelope(DestinationResident));
+            _outbox.Enqueue(new E(DestinationResident));
         }
         public void SendEnvelope(EnvelopeCenter envelopeCenter)
         {
@@ -125,15 +124,15 @@
 
 
     }
-    public class EnvelopeCenter : StateMachine
+    public class EnvelopeCenter : AThing
     {
-        private Queue<Envelope> _envelopeBox = new Queue<Envelope>();
+        private Queue<E> _envelopeBox = new Queue<E>();
 
         private List<Resident> _residents = new List<Resident>();
 
-        public Queue<Envelope> EnvelopeBox => _envelopeBox;
+        public Queue<E> EnvelopeBox => _envelopeBox;
 
-        public void ReceiveMail(Envelope envelope)
+        public void ReceiveMail(E envelope)
         {
             _envelopeBox.Enqueue(envelope);
         }
@@ -158,13 +157,13 @@
         }
 
     }
-    public class Resident : StateMachine
+    public class Resident : AThing
     {
         private readonly string _address;
 
-        private Queue<Envelope> _inbox = new Queue<Envelope>();
+        private Queue<E> _inbox = new Queue<E>();
 
-        public Queue<Envelope> Inbox => _inbox;
+        public Queue<E> Inbox => _inbox;
 
         public Resident(string Address)
         {
@@ -176,7 +175,7 @@
             envelopeCenter.AddResident(this);
         }
 
-        public void ReceiveEnvelope(Envelope envelope)
+        public void ReceiveEnvelope(E envelope)
         {
             _inbox.Enqueue(envelope);
         }
@@ -206,18 +205,18 @@
 
 
     }
-    public class Envelope
+    public class E
     {
         private readonly Resident _DestinationResident;
 
         public Resident DestinationResident => _DestinationResident;
 
-        public Envelope(Resident destinationResident)
+        public E(Resident destinationResident)
         {
             _DestinationResident = destinationResident;
         }
     }
-    public class ActionLetter : Envelope
+    public class ActionLetter : E
     {
 
         private readonly Action<Resident> _todo;
@@ -231,4 +230,5 @@
         }
 
     }
+
 }

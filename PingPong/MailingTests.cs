@@ -79,19 +79,6 @@ namespace PingPong
 
 
         [Fact]
-        public void TestMailBox()
-        {
-            PubSub<AMessage> componentA = new(_logger);
-            MessageReceiver componentB = new(_logger);
-            MessageMailbox mailboxB = new(componentB, _logger);
-            MessageWithReturnActor message = new(componentA, "hi!"); // I should add create message to the pubsub class
-            componentA.Subscribe(mailboxB);
-            componentA.Publish(message);
-            mailboxB.Handle();
-        }
-
-
-        [Fact]
         public void TestResponse()
         {
             PubSub<AMessage> componentA = new(_logger);

@@ -1,4 +1,3 @@
-
 // my job is to send cat memes --> Idk who is interested in cat memes, I just create the cat memes and send them;
 
 // THE TEST ABOVE AND BELOW ARE INDEPENDENTLY TESTABLE
@@ -8,13 +7,12 @@
 
 //BONUS ALL THE ABOVE BUT YOU CAN ALSO SEND DOG MEMES --> PEOPLE WHO SUBSCRIBE TO CAT RECEIVE CAT, PEOPLE WHO SUBSCRIBE TO DOG RECEIVE DOG AND PEOPLE WHO SUBSCRIBE TO BOTH RECEIVE DOG & CAT
 
-
 namespace CatMemes
 {
     public class TestingCatMemeMessaging
     {
         [Fact]
-        public void SendCatMeme()
+        public void CanSendCatMeme()
         {
             var catMeme = new CatMeme();
             var catMemeSender = new CatMemeSender();
@@ -23,7 +21,7 @@ namespace CatMemes
         }
 
         [Fact]
-        public void SubscribeToCatMemes()
+        public void CanSubscribeToCatMemes()
         {
             var catMemeReceiver = new CatMemeReceiver();
             var catMemePublisher = new CatMemePublisher();
@@ -31,7 +29,7 @@ namespace CatMemes
         }
 
         [Fact]
-        public void PublishCatMeme()
+        public void CanPublishCatMeme()
         {
             var catMeme = new CatMeme();
             var catMemePublisher = new CatMemePublisher();
@@ -39,16 +37,42 @@ namespace CatMemes
         }
 
         [Fact]
-        public void ReceiveCatMeme()
+        public void CanReceiveCatMeme()
         {
             var catMeme = new CatMeme();
             var catMemeReceiver = new CatMemeReceiver();
             Assert.NotNull(() => catMemeReceiver.Handle(catMeme));
         }
 
+        [Fact]
+        public void SubscriberIsAddedToSubscribers()
+        {
+            var catMemeReceiver = new CatMemeReceiver();
+            var catMemePublisher = new CatMemePublisher();
+            catMemePublisher.Subscribe(catMemeReceiver);
+            Assert.True(catMemePublisher.HasSubscriber(catMemeReceiver));
+        }
+
+        [Fact]
+        public void SubscriberWillReceivePublishedCatMemes() // The only way I can think of confirming receipt is through the CatMemeReceiver's state
+        {
+            var catMemeReceivers = new List<CatMemeReceiver> { new CatMemeReceiver(), new CatMemeReceiver(), new CatMemeReceiver() };
+            var catMemePublisher = new CatMemePublisher();
+            foreach (var catMemeReceiver in catMemeReceivers)
+            {
+                catMemePublisher.Subscribe(catMemeReceiver);
+            }
+            var catMeme = new CatMeme();
+            catMemePublisher.Publish(catMeme);
+            foreach (var catMemeReceiver in catMemeReceivers)
+            {
+                Assert.NotEqual(1, catMemeReceiver.CatMemesReceived);
+            }
+        }
+
     }
 
-    public interface Handler<T>
+    public interface IHandler<T>
     {
         void Handle(T t);
     };
@@ -57,7 +81,7 @@ namespace CatMemes
     {
 
     };
-    public class CatMemeSender : Handler<CatMeme>
+    public class CatMemeSender : IHandler<CatMeme>
     {
         public void Handle(CatMeme t)
         {
@@ -65,33 +89,48 @@ namespace CatMemes
         }
     }
 
-    public interface Subscriber<T>
+    public interface ISubscriber<T>
     {
         void Subscribe(T t);
     }
-    public interface Publisher<T>
+    public interface IPublisher<T>
     {
         void Publish(T t);
     }
 
-    public class CatMemePublisher : Subscriber<Handler<CatMeme>>, Publisher<CatMeme>
+    public class CatMemePublisher : ISubscriber<IHandler<CatMeme>>, IPublisher<CatMeme>
     {
-        public void Publish(CatMeme t)
+
+        private List<IHandler<CatMeme>> _catMemeSubscribers = new List<IHandler<CatMeme>>();
+
+        public bool HasSubscriber(IHandler<CatMeme> catMemeReciever)
         {
-            throw new NotImplementedException();
+            return _catMemeSubscribers.Contains(catMemeReciever);
+        }
+        public void Publish(CatMeme catMeme)
+        {
+            foreach (var subscriber in _catMemeSubscribers)
+            {
+                subscriber.Handle(catMeme);
+            }
         }
 
-        public void Subscribe(Handler<CatMeme> t)
+        public void Subscribe(IHandler<CatMeme> catMemeSubscriber)
         {
-            return;
+            _catMemeSubscribers.Add(catMemeSubscriber);
         }
     }
 
-    public class CatMemeReceiver : Handler<CatMeme>
+    public class CatMemeReceiver : IHandler<CatMeme>
     {
-        public void Handle(CatMeme t)
+
+        private int _catMemesReceived = 0;
+
+        public int CatMemesReceived => _catMemesReceived;
+
+        public void Handle(CatMeme catMeme)
         {
-            return;
+            _catMemesReceived++;
         }
     }
 }

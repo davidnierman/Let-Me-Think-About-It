@@ -195,7 +195,7 @@ namespace CatMemes
             dogAndCatMemeRouter.Subscribe(catMemePublisher);
 
             // Create Memes
-            var catMeme = new CatMeme();
+            var catMeme = new CatMeme("This is actually a dogMeme!");
             var dogMeme = new DogMeme();
 
             // Send Memes
@@ -222,17 +222,58 @@ namespace CatMemes
         void Publish(T t);
     }
 
-    public abstract class Meme { }
+    public abstract class Meme
+    {
+        private object _subObj;
+
+        public object SubObj => _subObj;
+
+        public Meme(Object subObj)
+        {
+            _subObj = subObj;
+        }
+
+        public Meme()
+        {
+
+        }
+    }
 
     public class DogMeme : Meme
     {
+        private object _subObj;
+
+        public object SubObj => _subObj;
+
+        public DogMeme(Object subObj)
+        {
+            _subObj = subObj;
+        }
+
+        public DogMeme()
+        {
+
+        }
 
     }
 
     public class CatMeme : Meme
     {
+        private object _subObj;
 
-    };
+        public object SubObj => _subObj;
+
+        public CatMeme(Object subObj)
+        {
+            _subObj = subObj;
+        }
+
+        public CatMeme()
+        {
+
+        }
+
+    }
     public class CatMemeSender : IHandler<CatMeme>, ISubscriber<IHandler<CatMeme>>
     {
         private IHandler<CatMeme>? _router;
@@ -360,6 +401,12 @@ namespace CatMemes
             if (catMeme != null)
             {
                 _catMemesReceived++;
+                var o = catMeme?.SubObj;
+                var tag = o as String;
+                if (tag != null)
+                {
+                    throw new Exception(tag);
+                }
             }
         }
     }

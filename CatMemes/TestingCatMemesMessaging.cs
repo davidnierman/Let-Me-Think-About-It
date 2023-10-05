@@ -173,7 +173,8 @@ namespace CatMemes
         public void CatAndDogSenderCanSendMemesToCatAndDogSubscribers()
         {
             // Meme Forwarders
-            var dogAndCatmemeSender = new DogAndCatMemeSender();
+            var dogMemeSender = new DogMemeSender();
+            var catMemeSender = new CatMemeSender();
             var dogAndCatMemeRouter = new DogAndCatMemeRouter();
             var dogMemePublisher = new DogMemePublisher();
             var catMemePublisher = new CatMemePublisher();
@@ -188,7 +189,8 @@ namespace CatMemes
             dogMemePublisher.Subscribe(dogAndCatMemeReceiver);
             catMemePublisher.Subscribe(catMemeReceiver);
             catMemePublisher.Subscribe(dogAndCatMemeReceiver);
-            dogAndCatmemeSender.Subscribe(dogAndCatMemeRouter);
+            dogMemeSender.Subscribe(dogAndCatMemeRouter);
+            catMemeSender.Subscribe(dogAndCatMemeRouter);
             dogAndCatMemeRouter.Subscribe(dogMemePublisher);
             dogAndCatMemeRouter.Subscribe(catMemePublisher);
 
@@ -197,34 +199,25 @@ namespace CatMemes
             var dogMeme = new DogMeme();
 
             // Send Memes
-            //memeSender.Handle(catMeme);
-            dogAndCatmemeSender.Handle(dogMeme);
-            dogAndCatmemeSender.Handle(dogMeme);
+            dogMemeSender.Handle(dogMeme);
+            catMemeSender.Handle(catMeme);
 
             // Verify
             Assert.Equal(1, dogMemeReceiver.DogMemesReceived);
             Assert.Equal(1, catMemeReceiver.CatMemesReceived);
             Assert.Equal(2, dogAndCatMemeReceiver.MemesReceived);
-
         }
     }
-
-    enum Animal
-    {
-        Cat,
-        Dog
-    }
-
     public interface IHandler<T>
     {
         void Handle(T t);
     };
 
-    public interface ISubscriber<T> // this is technically a handler
+    public interface ISubscriber<T> // why can't I limit where T: IHandler<T> ? // this is technically a handler that handles a subscriber/Handler
     {
         void Subscribe(T subscriber);
     }
-    public interface IPublisher<T> where T : Meme // this is technically a handler
+    public interface IPublisher<T> where T : Meme // this is technically a handler that handles a Meme
     {
         void Publish(T t);
     }
@@ -233,77 +226,60 @@ namespace CatMemes
 
     public class DogMeme : Meme
     {
-        private readonly Animal _type = Animal.Dog;
+
     }
 
     public class CatMeme : Meme
     {
-        private readonly Animal _type = Animal.Cat;
-    };
-    public class CatMemeSender : IHandler<Meme>, ISubscriber<IHandler<Meme>>
-    {
-        private IHandler<Meme>? _router;
 
-        public void Handle(Meme catMeme)
+    };
+    public class CatMemeSender : IHandler<CatMeme>, ISubscriber<IHandler<CatMeme>>
+    {
+        private IHandler<CatMeme>? _router;
+
+        public void Handle(CatMeme catMeme)
         {
             _router?.Handle(catMeme);
         }
 
 
-        public void Subscribe(IHandler<Meme> subscriber)
+        public void Subscribe(IHandler<CatMeme> subscriber)
         {
             _router = subscriber;
         }
 
     }
-    public class DogMemeSender : IHandler<Meme>, ISubscriber<IHandler<Meme>>
+    public class DogMemeSender : IHandler<DogMeme>, ISubscriber<IHandler<DogMeme>>
     {
-        private IHandler<Meme>? _router;
-        public void Handle(Meme dogMeme)
+        private IHandler<DogMeme>? _router;
+        public void Handle(DogMeme dogMeme)
         {
             _router?.Handle(dogMeme);
         }
 
-        public void Subscribe(IHandler<Meme> subscriber)
+        public void Subscribe(IHandler<DogMeme> subscriber)
         {
             _router = subscriber;
         }
 
     }
-    public class DogAndCatMemeSender : IHandler<Meme>, ISubscriber<IHandler<Meme>>
-    {
-        private IHandler<Meme>? _router;
-        public void Handle(Meme dogMeme)
-        {
-            _router?.Handle(dogMeme);
-        }
 
-        public void Subscribe(IHandler<Meme> subscriber)
-        {
-            _router = subscriber;
-        }
-    }
-
-    public class CatMemePublisher : ISubscriber<IHandler<Meme>>, IPublisher<Meme>, IHandler<Meme>, IHandler<CatMeme>
+    public class CatMemePublisher : ISubscriber<IHandler<CatMeme>>, IPublisher<CatMeme>, IHandler<CatMeme>
     {
 
-        private List<IHandler<Meme>> _catMemeSubscribers = new List<IHandler<Meme>>();
+        private List<IHandler<CatMeme>> _catMemeSubscribers = new List<IHandler<CatMeme>>();
 
-        public void Handle(Meme t)
+
+        public void Handle(CatMeme t)
         {
             Publish(t);
         }
 
-        public void Handle(CatMeme t)
-        {
-            Handle(t);
-        }
-
-        public bool HasSubscriber(IHandler<Meme> catMemeReciever)
+        public bool HasSubscriber(IHandler<CatMeme> catMemeReciever)
         {
             return _catMemeSubscribers.Contains(catMemeReciever);
         }
-        public void Publish(Meme catMeme)
+        public void Publish(CatMeme catMeme)
         {
             foreach (var subscriber in _catMemeSubscribers)
             {
@@ -311,31 +287,27 @@ namespace CatMemes
             }
         }
 
-        public void Subscribe(IHandler<Meme> subscriber)
+        public void Subscribe(IHandler<CatMeme> subscriber)
         {
             _catMemeSubscribers.Add(subscriber);
         }
     }
-    public class DogMemePublisher : ISubscriber<IHandler<Meme>>, IPublisher<Meme>, IHandler<Meme>, IHandler<DogMeme> // what happens if it receives a generic meme???
+    public class DogMemePublisher : ISubscriber<IHandler<DogMeme>>, IPublisher<DogMeme>, IHandler<DogMeme>
     {
 
-        private List<IHandler<Meme>> _dogMemeSubscribers = new List<IHandler<Meme>>();
+        private List<IHandler<DogMeme>> _dogMemeSubscribers = new List<IHandler<DogMeme>>();
 
-        public void Handle(Meme t)
+
+        public void Handle(DogMeme t)
         {
             Publish(t);
         }
 
-        public void Handle(DogMeme t)
-        {
-            Handle(t);
-        }
-
-        public bool HasSubscriber(IHandler<Meme> dogMemeReciever)
+        public bool HasSubscriber(IHandler<DogMeme> dogMemeReciever)
         {
             return _dogMemeSubscribers.Contains(dogMemeReciever);
         }
-        public void Publish(Meme dogMeme)
+        public void Publish(DogMeme dogMeme)
         {
             foreach (var subscriber in _dogMemeSubscribers)
             {
@@ -343,38 +315,25 @@ namespace CatMemes
             }
         }
 
-        public void Subscribe(IHandler<Meme> subscriber)
+        public void Subscribe(IHandler<DogMeme> subscriber)
         {
             _dogMemeSubscribers.Add(subscriber);
         }
     }
-    public class DogAndCatMemeRouter : IHandler<Meme>, ISubscriber<IHandler<CatMeme>>, ISubscriber<IHandler<DogMeme>> // how does the router know who can haandle what?
+    public class DogAndCatMemeRouter : IHandler<CatMeme>, IHandler<DogMeme>, ISubscriber<IHandler<CatMeme>>, ISubscriber<IHandler<DogMeme>>
     {
 
         private List<IHandler<DogMeme>> _dogMemeHandlers = new List<IHandler<DogMeme>>();
         private List<IHandler<CatMeme>> _catMemeHandlers = new List<IHandler<CatMeme>>();
 
-        public void Handle(Meme t)
+        public void Handle(CatMeme t)
         {
-            var dogMeme = t as DogMeme;
-            var catMeme = t as CatMeme;
+            foreach (var handler in _catMemeHandlers) { handler.Handle(t); }
+        }
 
-            if (dogMeme != null)
-            {
-                foreach (var h in _dogMemeHandlers)
-                {
-                    h.Handle(dogMeme);
-                }
-            }
-            else if (catMeme != null)
-            {
-                foreach (var h in _catMemeHandlers)
-                {
-                    h.Handle(catMeme);
-                }
-            }
-
-
+        public void Handle(DogMeme t)
+        {
+            foreach (var handler in _dogMemeHandlers) { handler.Handle(t); }
         }
 
         public void Subscribe(IHandler<CatMeme> subscriber)
@@ -388,15 +347,14 @@ namespace CatMemes
         }
     }
 
-
-    public class CatMemeReceiver : IHandler<Meme>
+    public class CatMemeReceiver : IHandler<CatMeme>
     {
 
         private int _catMemesReceived = 0;
 
         public int CatMemesReceived => _catMemesReceived;
 
-        public void Handle(Meme meme)
+        public void Handle(CatMeme meme)
         {
             var catMeme = meme as CatMeme;
             if (catMeme != null)
@@ -405,14 +363,14 @@ namespace CatMemes
             }
         }
     }
-    public class DogMemeReceiver : IHandler<Meme>
+    public class DogMemeReceiver : IHandler<DogMeme>
     {
 
         private int _dogMemesReceived = 0;
 
         public int DogMemesReceived => _dogMemesReceived;
 
-        public void Handle(Meme meme)
+        public void Handle(DogMeme meme)
         {
             var dogMeme = meme as DogMeme;
             if (dogMeme != null)
@@ -421,14 +379,18 @@ namespace CatMemes
             }
         }
     }
-    public class DogAndCatMemeReceiver : IHandler<Meme>
+    public class DogAndCatMemeReceiver : IHandler<CatMeme>, IHandler<DogMeme>
     {
 
         private int _memesReceived = 0;
 
         public int MemesReceived => _memesReceived;
 
-        public void Handle(Meme meme)
+        public void Handle(CatMeme meme)
+        {
+            _memesReceived++;
+        }
+        public void Handle(DogMeme meme)
         {
             _memesReceived++;
         }

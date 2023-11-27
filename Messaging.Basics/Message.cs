@@ -1,0 +1,1 @@
+﻿public abstract record Message();

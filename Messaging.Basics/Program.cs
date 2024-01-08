@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
  * JOSH: Thread safe dispatcher (should it even be?)
  *       Auto registration of handled types (discuss)
  * JOHN: Break it if possible
@@ -11,16 +10,36 @@
  * Correlation
  */
 
+using System.Diagnostics;
+
+namespace Messaging.Basics;
+
+public static class MakeMoreEnglish
+{
+    public static void SubscribeTo<T>(this IHandler<T> handler, Bus bus) where T : Message
+    {
+        bus.Subscribe(handler);
+    }
+
+    public static Bus WithContentBasedRouting(this Bus bus)
+    {
+        ContentBasedRouter.EnableFor(bus);
+        return bus;
+    }
+}
+// 0 root(1, 20), 1 0 parent (2, 13), 2 1 child(3, 10), child(11, 14), grandchild(4,5), grandchild(6,7), grandchild(8, 9), parent(16,19), grandchild(12,13), child(17, 18)
 public static class Program
 {
     public static void Main()
     {
-        var bus = new Bus();
+        var bus = new Bus().WithContentBasedRouting();
+        var printer = new PrintMessage();
+        printer.SubscribeTo(bus);
         Wireup(bus);
         Send(bus);
+        
         Console.ReadLine();
     }
-
 
     static void Wireup(Bus bus)
     {
@@ -38,9 +57,24 @@ public static class Program
         publisher.Publish(CardOperations.Charge("Alice", 10_000));
         publisher.Publish(CardOperations.Refund("Lee", 1_000));
     }
+
+    class PrintMessage : IHandler<Message>
+    {
+        public void Handle(Message m)
+        {
+            Console.WriteLine(m.GetType().FullName);
+        }
+    }
 }
 
-public class BankAccount:IHandler<BankAccount.ChargeAccount>, IHandler<BankAccount.RefundAccount>
+public static class ContentBasedRoutingExtensions{
+    public static void Subscribe<TBase, TMessage>(this Bus bus, IHandler<TMessage> handler, Func<TBase , bool> predicate) where TMessage : Message, TBase
+    {
+        bus.Publish(ContentBasedRouter.Register(handler, predicate));
+    }
+}
+
+public class BankAccount : IHandler<BankAccount.ChargeAccount>, IHandler<BankAccount.RefundAccount>
 {
     private readonly string _name;
     private decimal _amount;
@@ -55,14 +89,15 @@ public class BankAccount:IHandler<BankAccount.ChargeAccount>, IHandler<BankAccou
 
     public void SetupSubscriptions(Bus bus)
     {
-        bus.Subscribe<ChargeAccount>(this);
-        bus.Subscribe<RefundAccount>(this);
+        bus.Subscribe<BankMessage, ChargeAccount>(this, m => m.Name == _name);
+        bus.Subscribe<BankMessage, RefundAccount>(this, m => m.Name == _name);
     }
 
-    record ChargeAccount(string Name, decimal Amount) : Message;
-    record RefundAccount(string Name, decimal Amount) : Message;
+    abstract record BankMessage(string Name) : Message;
+    record ChargeAccount(string Name, decimal Amount) : BankMessage(Name);
+    record RefundAccount(string Name, decimal Amount) : BankMessage(Name);
 
-    public record OperationResult(string Name, bool Successful) :Message;
+    public record OperationResult(string Name, bool Successful) : Message;
 
     void IHandler<ChargeAccount>.Handle(ChargeAccount m)
     {
@@ -113,13 +148,13 @@ public class BankAccount:IHandler<BankAccount.ChargeAccount>, IHandler<BankAccou
 
     static void VerifyParameters(string name, decimal amount)
     {
-        if(string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
         if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount));
     }
 }
 
-public class CardOperations : 
-    IHandler<CardOperations.ChargeDebitCard>, 
+public class CardOperations :
+    IHandler<CardOperations.ChargeDebitCard>,
     IHandler<CardOperations.RefundDebitCard>,
     IHandler<BankAccount.OperationResult>
 {
@@ -152,11 +187,11 @@ public class CardOperations :
         {
             Console.WriteLine($"Something failed for {m.Name}");
         }
-        
+
     }
 
-    record ChargeDebitCard(string Name, decimal Amount):Message;
-    record RefundDebitCard(string Name, decimal Amount):Message;
+    record ChargeDebitCard(string Name, decimal Amount) : Message;
+    record RefundDebitCard(string Name, decimal Amount) : Message;
 
     public static Message Charge(string name, decimal amount)
     {
@@ -172,7 +207,7 @@ public class CardOperations :
 
     static void VerifyParameters(string name, decimal amount)
     {
-        if(string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
         if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount));
     }
 

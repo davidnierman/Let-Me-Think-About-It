@@ -1,1 +1,3 @@
-﻿public abstract record Message();
+﻿namespace Messaging.Basics;
+
+public abstract record Message();

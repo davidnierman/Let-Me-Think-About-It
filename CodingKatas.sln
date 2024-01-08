@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parsing.Tests", "Parsing.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pattern.Tests", "Pattern.Tests\Pattern.Tests.csproj", "{85DE64D5-C612-48EB-9872-A84F94700056}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.Basics", "Messaging.Basics\Messaging.Basics.csproj", "{CA224467-7CF9-4BF7-9FE5-75F3A05C5A90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging.Basics", "Messaging.Basics\Messaging.Basics.csproj", "{CA224467-7CF9-4BF7-9FE5-75F3A05C5A90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.Basics.Tests", "Messaging.Basics.Tests\Messaging.Basics.Tests.csproj", "{B4FA8B16-625E-46CA-AB42-2AE0FC49B02C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{CA224467-7CF9-4BF7-9FE5-75F3A05C5A90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA224467-7CF9-4BF7-9FE5-75F3A05C5A90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA224467-7CF9-4BF7-9FE5-75F3A05C5A90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4FA8B16-625E-46CA-AB42-2AE0FC49B02C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4FA8B16-625E-46CA-AB42-2AE0FC49B02C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4FA8B16-625E-46CA-AB42-2AE0FC49B02C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4FA8B16-625E-46CA-AB42-2AE0FC49B02C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

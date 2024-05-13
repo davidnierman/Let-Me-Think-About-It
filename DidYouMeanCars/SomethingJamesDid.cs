@@ -8,6 +8,7 @@ namespace DidYouMeanCars
 {
     internal class SomethingJamesDid 
     {
+        //TODO implement this
         public bool IsBarcodeICanUnderstand(string barcode)
         {
             return true;

@@ -31,7 +31,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscription.Tests", "Subsc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncWhoNow", "AsyncWhoNow\AsyncWhoNow.csproj", "{3E217F88-FA17-471B-BAD3-A068781A629B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DidYouMeanCars", "DidYouMeanCars\DidYouMeanCars.csproj", "{867340CC-2798-414B-AEB0-A7145E63C79B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DidYouMeanCars", "DidYouMeanCars\DidYouMeanCars.csproj", "{867340CC-2798-414B-AEB0-A7145E63C79B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateMachines", "StateMachines\StateMachines.csproj", "{5A7E795E-CEBB-4B27-8833-90B95C0A6AF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -99,6 +101,10 @@ Global
 		{867340CC-2798-414B-AEB0-A7145E63C79B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{867340CC-2798-414B-AEB0-A7145E63C79B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{867340CC-2798-414B-AEB0-A7145E63C79B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A7E795E-CEBB-4B27-8833-90B95C0A6AF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A7E795E-CEBB-4B27-8833-90B95C0A6AF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A7E795E-CEBB-4B27-8833-90B95C0A6AF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A7E795E-CEBB-4B27-8833-90B95C0A6AF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
